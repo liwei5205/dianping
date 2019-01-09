@@ -1,5 +1,7 @@
 package com.kirck.mapper;
 
+import org.apache.ibatis.annotations.Mapper;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.kirck.entity.BranchDealEntity;
 
@@ -11,6 +13,7 @@ import com.kirck.entity.BranchDealEntity;
  * @author kirck007
  * @since 2019-01-09
  */
+@Mapper
 public interface BranchDealMapper extends BaseMapper<BranchDealEntity> {
 
 }

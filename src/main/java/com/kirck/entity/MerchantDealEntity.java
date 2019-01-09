@@ -35,7 +35,7 @@ public class MerchantDealEntity extends Model<MerchantDealEntity> {
     private static final long serialVersionUID = 1L;
 
    @ApiModelProperty(value = "", name = "id", required = false)
-      @TableId(value = "id", type = IdType.AUTO)
+      @TableId(value = "id", type = IdType.UUID)
    private String id;
     /**
      * 商户id
