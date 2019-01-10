@@ -16,6 +16,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver.Options;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -54,9 +55,26 @@ public class DriverController extends BaseController{
     @GetMapping(value = "/hello")
 	@ResponseBody
 	@ApiOperation(value = "欢迎", httpMethod = "GET")
-	public  String sayHello(String dealId) {
+	public  String sayHello() {
 		ChromeDriver browser = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
 				SysConstants.SysConfig.CHROMEDRIVERPATH);
+		browser.get("https://www.baidu.com");
+		try {
+				Thread.sleep(20000L);
+			
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		browser.close();
+    	return "hello";
+    }
+    
+    @GetMapping(value = "/sayFox")
+	@ResponseBody
+	@ApiOperation(value = "欢迎", httpMethod = "GET")
+	public  String sayFox() {
+    	FirefoxDriver browser = (FirefoxDriver) BrowserUtils.openFireBrowser(SysConstants.SysConfig.FIREFOXDRIVER,
+				SysConstants.SysConfig.FIREFOXPATH);
 		browser.get("https://www.baidu.com");
 		try {
 				Thread.sleep(20000L);

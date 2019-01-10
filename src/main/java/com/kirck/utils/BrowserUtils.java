@@ -11,20 +11,18 @@ import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import com.kirck.commen.SysConstants;
 
 public class BrowserUtils {
-    private static ChromeDriver browser;
+    private static WebDriver browser;
 
 
     public static WebDriver openBrowser(String chromedriver, String chromedriverpath) {
     	ChromeOptions options = new ChromeOptions();
-    	options.addArguments("--headless");
-    	options.addArguments("--disable-gpu");
-    	options.addArguments("window-size=1024,768");
     	options.addArguments("--no-sandbox");    	
         System.getProperties().setProperty(chromedriver,chromedriverpath);
         browser = new ChromeDriver(options);
@@ -34,6 +32,15 @@ public class BrowserUtils {
         return browser;
     }
 
+    public static WebDriver openFireBrowser(String driver, String path) {	
+        System.getProperties().setProperty(driver,path);
+        browser = new FirefoxDriver();
+        //等待
+        browser.manage().timeouts()
+                .implicitlyWait(10, TimeUnit.SECONDS);
+        return browser;
+    }
+    
     public static List<Map<String, Object>> loginDianPing(ChromeDriver webDriver, String username, String password) {
         webDriver.get(SysConstants.SysConfig.DIANPINGLOGINURL);
         //显示等待控制对象
@@ -62,7 +69,7 @@ public class BrowserUtils {
         webDriver.close();
     }
 
-	public static ChromeDriver openBrowserWithProxy(String chromedriver, String chromedriverpath,String proxyIpAndPort) {
+	public static WebDriver openBrowserWithProxy(String chromedriver, String chromedriverpath,String proxyIpAndPort) {
 		System.getProperties().setProperty(chromedriver,chromedriverpath);
         Proxy proxy = new Proxy();
 		proxy.setHttpProxy(proxyIpAndPort).setFtpProxy(proxyIpAndPort ).setSslProxy(proxyIpAndPort);

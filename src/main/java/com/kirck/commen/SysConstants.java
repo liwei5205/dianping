@@ -43,7 +43,9 @@ public class SysConstants {
 
 	//sysCofig
 	public interface SysConfig {
+		String FIREFOXDRIVER = "webdriver.gecko.driver";
 		String CHROMEDRIVER = "webdriver.chrome.driver";
+		String FIREFOXPATH = "/opt/java/geckodriver";
 		String CHROMEDRIVERPATH = "/opt/java/chromedriver";
 		String DIANPINGLOGINURL = "https://account.dianping.com/login";
 		String DIANPINGHOMEURL = "http://www.dianping.com";
