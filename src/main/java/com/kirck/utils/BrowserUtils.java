@@ -21,8 +21,13 @@ public class BrowserUtils {
 
 
     public static WebDriver openBrowser(String chromedriver, String chromedriverpath) {
+    	ChromeOptions options = new ChromeOptions();
+    	options.addArguments("--headless");
+    	options.addArguments("--disable-gpu");
+    	options.addArguments("window-size=1024,768");
+    	options.addArguments("--no-sandbox");    	
         System.getProperties().setProperty(chromedriver,chromedriverpath);
-        browser = new ChromeDriver();
+        browser = new ChromeDriver(options);
         //等待
         browser.manage().timeouts()
                 .implicitlyWait(10, TimeUnit.SECONDS);

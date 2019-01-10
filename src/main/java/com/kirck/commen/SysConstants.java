@@ -44,7 +44,7 @@ public class SysConstants {
 	//sysCofig
 	public interface SysConfig {
 		String CHROMEDRIVER = "webdriver.chrome.driver";
-		String CHROMEDRIVERPATH = "D:/project/chromedriver.exe";
+		String CHROMEDRIVERPATH = "/opt/java/chromedriver";
 		String DIANPINGLOGINURL = "https://account.dianping.com/login";
 		String DIANPINGHOMEURL = "http://www.dianping.com";
 		//"http://t.dianping.com/list/shanghai-category_1?desc=1&sort=new&pageIndex=0"

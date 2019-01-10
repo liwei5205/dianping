@@ -1,5 +1,6 @@
 package com.kirck.controller;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,11 +50,28 @@ public class DriverController extends BaseController{
     @Resource
     RedisTemplate<String, Object> redisTemplate;
 
-
-	@GetMapping(value = "/hello")
+    
+    @GetMapping(value = "/hello")
 	@ResponseBody
 	@ApiOperation(value = "欢迎", httpMethod = "GET")
-	public  String setCategoryAll(String dealId) {
+	public  String sayHello(String dealId) {
+		ChromeDriver browser = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
+				SysConstants.SysConfig.CHROMEDRIVERPATH);
+		browser.get("https://www.baidu.com");
+		try {
+				Thread.sleep(20000L);
+			
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		browser.close();
+    	return "hello";
+    }
+    
+	@GetMapping(value = "/getBranch")
+	@ResponseBody
+	@ApiOperation(value = "欢迎", httpMethod = "GET")
+	public  String getBranch(String dealId) {
 		MerchantDealEntity merchantDeal = dianPingService.findDealInfo(dealId);
 		String html = (String) redisTemplate.opsForValue().get(RedisConstants.KEYPRE.DIANPING
         		+RedisConstants.OBJTYPE.HTML+SysConstants.SysConfig.DEAL+SysConstants.Symbol.COLON+dealId);
