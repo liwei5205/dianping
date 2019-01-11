@@ -41,13 +41,13 @@ public class MerchantDealEntity extends Model<MerchantDealEntity> {
      * 商户id
      */
    @ApiModelProperty(value = "商户id", name = "merchantId", required = false)
-      @TableField("merchant_id")
+   @TableField("merchant_id")
    private String merchantId;
     /**
      * 标题
      */
    @ApiModelProperty(value = "标题", name = "dealTitle", required = false)
-      @TableField("deal_title")
+   @TableField("deal_title")
    private String dealTitle;
     /**
      * 折扣价

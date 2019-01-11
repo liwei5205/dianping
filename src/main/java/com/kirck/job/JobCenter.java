@@ -11,13 +11,16 @@ import javax.annotation.Resource;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Options;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.kirck.commen.NumberConstants;
@@ -42,11 +45,11 @@ public class JobCenter {
         System.out.println("Job"+new Date());
     }
     
-	@Scheduled(cron = "0 55 13,8 * * ?")
+	@Scheduled(cron = "0 15 16,3 * * ?")
 	public void job2() {
 		// 打开浏览器
-		ChromeDriver webDriver = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
-				SysConstants.SysConfig.CHROMEDRIVERPATH);
+		FirefoxDriver webDriver = (FirefoxDriver) BrowserUtils.openFireBrowser(SysConstants.SysConfig.FIREFOXDRIVER,
+				SysConstants.SysConfig.FIREFOXPATH);
 		// 设置缓存
 		setCookie(webDriver);
 		String[] categoryIds = { "15", "21", "19", "164", "165", "167", "14", "26" };
@@ -64,12 +67,11 @@ public class JobCenter {
 						+ RedisConstants.SPLITTER;
 				// 查找最新的折扣信息记录
 				String urlId = (String) redisTemplate.opsForValue().get(lastDealPath);
-				while (index < 2) {
+				while (index < 10) {
 					url = SysConstants.SysConfig.DIANPINGLIST + SysConstants.Symbol.SLASH + city
 							+ SysConstants.Symbol.DASH + SysConstants.SysConfig.CATEGORY + SysConstants.Symbol.UNDERLINE
 							+ categoryId + SysConstants.Symbol.STRING_QUESTION + SysConstants.SysConfig.NEWSORT
 							+ index++;
-					System.out.println("url:" + url);
 					try {
 						Thread.sleep(2000L);
 
@@ -94,6 +96,9 @@ public class JobCenter {
 							dealIds);
 					categoryDeals.addAll(circeMerchantDeals);
 					if (circeMerchantDeals.size() != 40) {
+						if (!CollectionUtils.isEmpty(categoryDeals)) {
+							redisTemplate.opsForValue().set(lastDealPath, categoryDeals.get(0).getDianpingUrlId());
+						}
 						break CATEGORY;
 					}
 				}
@@ -107,7 +112,7 @@ public class JobCenter {
 		BrowserUtils.closeBrowser(webDriver);
 	}
     
-	private List<MerchantDealEntity> parseDeal(ChromeDriver webDriver, String lastUrlId, List<String> dealIds) {
+	private List<MerchantDealEntity> parseDeal(WebDriver webDriver, String lastUrlId, List<String> dealIds) {
 		// 团购信息存储
 		List<MerchantDealEntity> merchantDeals = new ArrayList<MerchantDealEntity>();
 		WebElement element = webDriver.findElement(By.cssSelector("div.tg-tab-box.tg-floor.on"));
@@ -134,7 +139,7 @@ public class JobCenter {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void setCookie(ChromeDriver browser) {
+	private void setCookie(WebDriver browser) {
 		String cookiesPath = RedisConstants.KEYPRE.DIANPING+RedisConstants.OBJTYPE.COOKIES+SysConstants.SysConfig.USERNAME;
 		List<Map<String,Object>> cookies= (List<Map<String, Object>>) redisTemplate.opsForValue().get(cookiesPath);
 		if(cookies==null) {

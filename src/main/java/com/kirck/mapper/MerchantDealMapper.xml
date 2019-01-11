@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kirck.mapper.MerchantDealMapper">
+	
+	    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, merchant_id, deal_title,price,store_price,dianping_url_id,create_date
+    </sql>
+    
+	    <!-- 测试手写的SQL -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert INTO t_merchant_deal 
+        (
+        <include refid="Base_Column_List" />
+        )
+        VALUES 
+        <foreach  collection ="merchantDeals" item="merchantDeal" separator =",">
+         (
+         #{merchantDeal.id}, #{merchantDeal.merchantId}, #{merchantDeal.dealTitle},
+         #{merchantDeal.price}, #{merchantDeal.storePrice}, #{merchantDeal.dianpingUrlId},
+         #{merchantDeal.createDate}
+         )
+    	</foreach >
+    </insert>
+</mapper>

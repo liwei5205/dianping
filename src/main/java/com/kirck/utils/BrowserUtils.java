@@ -23,7 +23,12 @@ public class BrowserUtils {
 
     public static WebDriver openBrowser(String chromedriver, String chromedriverpath) {
     	ChromeOptions options = new ChromeOptions();
-    	options.addArguments("--no-sandbox");    	
+    	options.addArguments("start-maximized");
+    	options.addArguments("disable-infobars");
+    	options.addArguments("--disable-extensions");
+    	options.addArguments("--disable-gpu");
+    	options.addArguments("--disable-dev-shm-usage");
+    	options.addArguments("--no-sandbox");
         System.getProperties().setProperty(chromedriver,chromedriverpath);
         browser = new ChromeDriver(options);
         //等待
@@ -41,7 +46,7 @@ public class BrowserUtils {
         return browser;
     }
     
-    public static List<Map<String, Object>> loginDianPing(ChromeDriver webDriver, String username, String password) {
+    public static List<Map<String, Object>> loginDianPing(WebDriver webDriver, String username, String password) {
         webDriver.get(SysConstants.SysConfig.DIANPINGLOGINURL);
         //显示等待控制对象
 /*        WebDriverWait webDriverWait=new WebDriverWait(webDriver,10);
@@ -65,7 +70,7 @@ public class BrowserUtils {
         return list;
     }
 
-    public static void closeBrowser(ChromeDriver webDriver) {
+    public static void closeBrowser(WebDriver webDriver) {
         webDriver.close();
     }
 

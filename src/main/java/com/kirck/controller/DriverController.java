@@ -13,6 +13,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Options;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -166,8 +167,8 @@ public class DriverController extends BaseController{
 
 	private String getDealHtml(String dealId) {
 		// 打开浏览器
-		ChromeDriver browser = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
-				SysConstants.SysConfig.CHROMEDRIVERPATH);
+		FirefoxDriver browser = (FirefoxDriver) BrowserUtils.openFireBrowser(SysConstants.SysConfig.FIREFOXDRIVER,
+				SysConstants.SysConfig.FIREFOXPATH);
 		// 添加大众点评cookies
 		setCookie(browser);
 		browser.get(SysConstants.SysConfig.DIANPINGDEAl + SysConstants.Symbol.SLASH + dealId);
@@ -199,7 +200,7 @@ public class DriverController extends BaseController{
 
 
 	@SuppressWarnings("unchecked")
-	private void setCookie(ChromeDriver browser) {
+	private void setCookie(WebDriver browser) {
 		String cookiesPath = RedisConstants.KEYPRE.DIANPING+RedisConstants.OBJTYPE.COOKIES+SysConstants.SysConfig.USERNAME;
 		List<Map<String,Object>> cookies= (List<Map<String, Object>>) redisTemplate.opsForValue().get(cookiesPath);
 		if(cookies==null) {
