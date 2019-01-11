@@ -1,6 +1,5 @@
 package com.kirck.controller;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -89,46 +88,50 @@ public class DriverController extends BaseController{
 	@GetMapping(value = "/getBranch")
 	@ResponseBody
 	@ApiOperation(value = "欢迎", httpMethod = "GET")
-	public  String getBranch(String dealId) {
+	public String getBranch(String dealId) {
 		MerchantDealEntity merchantDeal = dianPingService.findDealInfo(dealId);
+		
 		String html = (String) redisTemplate.opsForValue().get(RedisConstants.KEYPRE.DIANPING
-        		+RedisConstants.OBJTYPE.HTML+SysConstants.SysConfig.DEAL+SysConstants.Symbol.COLON+dealId);
-		/*
-		 * if(StringUtils.isBlank(html)) { html = getDealHtml(dealId); }
-		 */
+				+ RedisConstants.OBJTYPE.HTML + SysConstants.SysConfig.DEAL + SysConstants.Symbol.COLON + dealId);
+
+		if (StringUtils.isBlank(html)) {
+			html = getDealHtml(dealId);
+		}
+
 		Document document = Jsoup.parse(html);
-        //获取团购标题
-		if(StringUtils.isBlank(merchantDeal.getDealTitle())) {
-	        String title = document.getElementsByClass("sub-title").text();
-	        try {
-	        	title = TitleUtils.getTitle(title);
-	        }catch (Exception e) {
-	        	logger.error("titleStringErro",e);
+		// 获取团购标题
+		if (StringUtils.isBlank(merchantDeal.getDealTitle())) {
+			String title = document.getElementsByClass("sub-title").text();
+			try {
+				title = TitleUtils.getTitle(title);
+			} catch (Exception e) {
+				logger.error("titleStringErro", e);
 			}
-	        merchantDeal.setDealTitle(title);
+			merchantDeal.setDealTitle(title);
 			dianPingService.updateMerchantDeal(merchantDeal);
 		}
-		//获取分店id
+		// 获取分店id
 		Elements elements = document.getElementsByAttribute("data-shop-id");
 		List<MerchantBranchEntity> mbs = new ArrayList<MerchantBranchEntity>();
 		List<String> mbIds = new ArrayList<String>();
-		T:for (Element element : elements) {
-			//排除地图信息
-			if(!element.attr("class").startsWith("J_content_list")) {
+		T: for (Element element : elements) {
+			// 排除地图信息
+			if (!element.attr("class").startsWith("J_content_list")) {
 				continue;
 			}
 			Elements elementChildrens = element.children();
-			MerchantBranchEntity mb = null; 
+			MerchantBranchEntity mb = null;
 			for (Element children : elementChildrens) {
-				if("shoptitle".equals(children.attr("class"))) {
+				if ("shoptitle".equals(children.attr("class"))) {
 					Elements children2 = children.children();
 					for (Element element2 : children2) {
-						if(element2.hasAttr("href")) {
-							String shopId = element2.attr("href").replaceFirst(SysConstants.SysConfig.DIANPINGSHOP+SysConstants.Symbol.SLASH, "");
+						if (element2.hasAttr("href")) {
+							String shopId = element2.attr("href")
+									.replaceFirst(SysConstants.SysConfig.DIANPINGSHOP + SysConstants.Symbol.SLASH, "");
 							mb = dianPingService.findMerchantBranch(shopId);
-							if(mb!=null) {
+							if (mb != null) {
 								mbIds.add(mb.getId());
-								continue T;		
+								continue T;
 							}
 							mb = new MerchantBranchEntity();
 							mb.setId(UUIDUtils.getNewId());
@@ -137,18 +140,18 @@ public class DriverController extends BaseController{
 						}
 					}
 				}
-				if("shopdetail".equals(children.attr("class"))) {
+				if ("shopdetail".equals(children.attr("class"))) {
 					Elements children2 = children.children();
 					for (Element element2 : children2) {
 						String text = element2.text();
-						if(text.contains("地址")) {
-							mb.setAddress(text.substring(text.indexOf("：")+1));
+						if (text.contains("地址")) {
+							mb.setAddress(text.substring(text.indexOf("：") + 1));
 						}
-						if(text.contains("电话")) {
-							mb.setTelephone(text.substring(text.indexOf("：")+1));
+						if (text.contains("电话")) {
+							mb.setTelephone(text.substring(text.indexOf("：") + 1));
 						}
-						if(text.contains("营业时间")) {
-							mb.setBusinessHours(text.substring(text.indexOf("：")+1));
+						if (text.contains("营业时间")) {
+							mb.setBusinessHours(text.substring(text.indexOf("：") + 1));
 						}
 					}
 				}
@@ -157,59 +160,8 @@ public class DriverController extends BaseController{
 			mbIds.add(mb.getId());
 		}
 		dianPingService.saveMerchantBranch(mbs);
-		dianPingService.saveBranchDeal(merchantDeal.getId(),mbIds);
+		dianPingService.saveBranchDeal(merchantDeal.getId(), mbIds);
 		return "success";
-	}
-
-	@GetMapping(value = "/getDealId")
-	@ResponseBody
-	@ApiOperation(value = "爬出团购信息", httpMethod = "GET")
-	public  String getDealId() {
-		String[] categoryIds = {"15","21","19","164","165","167","14","26"};
-		String[] citys = {"wuhan","shanghai"};
-		//http://t.dianping.com/list/wuhan-category_14?desc=1&sort=new
-		String url = "";
-		for (String city : citys) {
-			for (String categoryId : categoryIds) {
-				int index = 0;
-				while(index!=20) {
-				url = SysConstants.SysConfig.DIANPINGLIST
-						+SysConstants.Symbol.SLASH
-						+city
-						+SysConstants.Symbol.DASH
-						+SysConstants.SysConfig.CATEGORY
-						+SysConstants.Symbol.UNDERLINE
-						+categoryId
-						+SysConstants.SysConfig.NEWSORT
-						+index++;
-				System.out.println("url:"+url);
-				List<MerchantDealEntity> list = this.parseDeal(url);
-				}
-			}
-		}
-		return null;
-	}
-	
-
-	private List<MerchantDealEntity> parseDeal(String url) {
-		// 打开浏览器
-		ChromeDriver browser = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
-				SysConstants.SysConfig.CHROMEDRIVERPATH);
-		// 添加大众点评cookies
-		setCookie(browser);
-		browser.get(url);
-		try {
-			while (true) {
-				Thread.sleep(2000L);
-				if (!browser.getCurrentUrl().startsWith(SysConstants.SysConfig.DIANPINGLOGINURL)) {
-					break;
-				}
-			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		return null;
 	}
 
 	private String getDealHtml(String dealId) {

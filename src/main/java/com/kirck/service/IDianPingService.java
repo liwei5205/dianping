@@ -34,5 +34,11 @@ public interface IDianPingService {
 	void saveBranchDeal(String id, List<String> mbIds);
 
 	MerchantBranchEntity findMerchantBranch(String shopId);
+	
+	/**
+	 * 批量保存
+	 * @param merchantDeals
+	 */
+	void saveOrUpdate(List<MerchantDealEntity> merchantDeals);
 
 }

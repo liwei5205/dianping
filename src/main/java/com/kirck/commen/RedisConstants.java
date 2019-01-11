@@ -30,5 +30,6 @@ public class RedisConstants {
 		String COOKIES = "cookies" + SPLITTER;
 		String CATEGORY = "category" + SPLITTER;
 		String HTML = "html" + SPLITTER;
+		String DEAL = "deal"+SPLITTER;
 	}
 }

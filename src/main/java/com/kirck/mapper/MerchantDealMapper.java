@@ -1,5 +1,7 @@
 package com.kirck.mapper;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -15,5 +17,7 @@ import com.kirck.entity.MerchantDealEntity;
  */
 @Mapper
 public interface MerchantDealMapper extends BaseMapper<MerchantDealEntity> {
+
+	void batchInsert(List<MerchantDealEntity> merchantDeals);
 
 }

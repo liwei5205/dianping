@@ -70,4 +70,9 @@ public class DianPingServiceImpl extends AbstractService implements IDianPingSer
 		return merchantBranchMapper.selectOne(new QueryWrapper<MerchantBranchEntity>().eq("shop_id", shopId));
 	}
 
+	@Override
+	public void saveOrUpdate(List<MerchantDealEntity> merchantDeals) {
+		merchantDealMapper.batchInsert(merchantDeals);
+	}
+
 }
