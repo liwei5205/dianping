@@ -36,15 +36,6 @@ public class BrowserUtils {
                 .implicitlyWait(10, TimeUnit.SECONDS);
         return browser;
     }
-
-    public static WebDriver openFireBrowser(String driver, String path) {	
-        System.getProperties().setProperty(driver,path);
-        browser = new FirefoxDriver();
-        //等待
-        browser.manage().timeouts()
-                .implicitlyWait(10, TimeUnit.SECONDS);
-        return browser;
-    }
     
     public static List<Map<String, Object>> loginDianPing(WebDriver webDriver, String username, String password) {
         webDriver.get(SysConstants.SysConfig.DIANPINGLOGINURL);
@@ -57,7 +48,7 @@ public class BrowserUtils {
         webDriver.findElement(By.id("login-button-account")).click();*/
         //等待2秒用于页面加载，保证Cookie响应全部获取。
         try {
-            Thread.sleep(10000);
+            Thread.sleep(20000);
         }catch (InterruptedException e){
             e.printStackTrace();
         }

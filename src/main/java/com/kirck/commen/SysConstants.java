@@ -43,9 +43,9 @@ public class SysConstants {
 
 	//sysCofig
 	public interface SysConfig {
-		String FIREFOXDRIVER = "webdriver.gecko.driver";
+		//String FIREFOXDRIVER = "webdriver.gecko.driver";
 		String CHROMEDRIVER = "webdriver.chrome.driver";
-		String FIREFOXPATH = "/opt/java/geckodriver";
+		//String FIREFOXPATH = "/opt/java/geckodriver";
 		//String CHROMEDRIVERPATH = "D:/project/chromedriver.exe";
 		String CHROMEDRIVERPATH = "/opt/java/chromedriver";
 		String DIANPINGLOGINURL = "https://account.dianping.com/login";
@@ -57,7 +57,8 @@ public class SysConstants {
 		String SHOP = "shop";
 		String DIANPINGSHOP = DIANPINGHOMEURL+Symbol.SLASH+SHOP;
 		String NEWSORT = "desc=1&sort=new&pageIndex=";
-		String USERNAME = "18571844624";
+		//String USERNAME = "18571844624";
+		String USERNAME = "18271894624";
 		String PASSWORD = "Qq276532727";
 		String DEAL = "deal";
 	}

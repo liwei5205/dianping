@@ -8,6 +8,6 @@ public class TypeConstants {
 		int ABNORMAL = 1;
 		int EXPIRE = 4;
 		int DELETE = 5;
-	}
+	}	
 
 }

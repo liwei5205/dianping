@@ -1,11 +1,14 @@
 package com.kirck.job;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
@@ -29,6 +32,7 @@ import com.kirck.commen.SysConstants;
 import com.kirck.entity.MerchantDealEntity;
 import com.kirck.service.IDianPingService;
 import com.kirck.utils.BrowserUtils;
+import com.kirck.utils.TitleUtils;
 import com.kirck.utils.UUIDUtils;
 
 @Component
@@ -40,16 +44,16 @@ public class JobCenter {
     @Resource
     RedisTemplate<String, Object> redisTemplate;
     
-    @Scheduled(cron = "0/15 * * * * *")
+    @Scheduled(cron = "0 1 * * * *")
     public void job(){
-        System.out.println("Job"+new Date());
+        System.out.println("1分钟打印Job"+new Date());
     }
     
-	@Scheduled(cron = "0 15 16,3 * * ?")
+	@Scheduled(cron = "0 59 23,11 * * ?")
 	public void job2() {
 		// 打开浏览器
-		FirefoxDriver webDriver = (FirefoxDriver) BrowserUtils.openFireBrowser(SysConstants.SysConfig.FIREFOXDRIVER,
-				SysConstants.SysConfig.FIREFOXPATH);
+		ChromeDriver webDriver = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
+				SysConstants.SysConfig.CHROMEDRIVERPATH);
 		// 设置缓存
 		setCookie(webDriver);
 		String[] categoryIds = { "15", "21", "19", "164", "165", "167", "14", "26" };
@@ -57,9 +61,9 @@ public class JobCenter {
 		// http://t.dianping.com/list/shanghai-category_15?desc=1&sort=new
 		List<MerchantDealEntity> merchantDeals = new ArrayList<MerchantDealEntity>();
 		String url = "";
-		List<String> dealIds = new ArrayList<String>();
 		for (String city : citys) {
 			CATEGORY: for (String categoryId : categoryIds) {
+				List<String> dealIds = new ArrayList<String>();
 				List<MerchantDealEntity> categoryDeals = new ArrayList<MerchantDealEntity>();
 				int index = NumberConstants.DIGIT_ZERO;
 				String lastDealPath = RedisConstants.KEYPRE.DIANPING + RedisConstants.OBJTYPE.DEAL + city
@@ -67,7 +71,7 @@ public class JobCenter {
 						+ RedisConstants.SPLITTER;
 				// 查找最新的折扣信息记录
 				String urlId = (String) redisTemplate.opsForValue().get(lastDealPath);
-				while (index < 10) {
+				while (index < 5) {
 					url = SysConstants.SysConfig.DIANPINGLIST + SysConstants.Symbol.SLASH + city
 							+ SysConstants.Symbol.DASH + SysConstants.SysConfig.CATEGORY + SysConstants.Symbol.UNDERLINE
 							+ categoryId + SysConstants.Symbol.STRING_QUESTION + SysConstants.SysConfig.NEWSORT
@@ -99,7 +103,7 @@ public class JobCenter {
 						if (!CollectionUtils.isEmpty(categoryDeals)) {
 							redisTemplate.opsForValue().set(lastDealPath, categoryDeals.get(0).getDianpingUrlId());
 						}
-						break CATEGORY;
+						continue CATEGORY;
 					}
 				}
 				// 将第一条记录塞入缓存
@@ -108,7 +112,16 @@ public class JobCenter {
 			}
 			Collections.reverse(merchantDeals);
 		}
-		dianPingService.saveOrUpdate(merchantDeals);
+		if(!CollectionUtils.isEmpty(merchantDeals)) {
+			// 去重
+			List<String> dealIds = new ArrayList<String>();
+			List<MerchantDealEntity> insetList = merchantDeals.stream().filter(m -> {
+				boolean flag = !dealIds.contains(m.getDealTitle());
+				dealIds.add(m.getDealTitle());
+				return flag;
+			}).collect(Collectors.toList());
+			dianPingService.saveOrUpdate(insetList);
+		}
 		BrowserUtils.closeBrowser(webDriver);
 	}
     
@@ -129,6 +142,9 @@ public class JobCenter {
 				continue;
 			}
 			merchantDeal.setId(UUIDUtils.getNewId());
+			merchantDeal.setDealTitle(webElement.findElement(By.tagName("h3")).getText() + "的"
+					+ TitleUtils.getTitle(webElement.findElement(By.tagName("h4")).getText()));
+			merchantDeal.setCreateDate(LocalDateTime.now());
 			merchantDeal.setPrice(new BigDecimal(webElement.findElement(By.tagName("em")).getText()));
 			merchantDeal.setStorePrice(new BigDecimal(webElement.findElement(By.tagName("del")).getText()));
 			merchantDeal.setDianpingUrlId(urlId);

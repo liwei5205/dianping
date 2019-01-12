@@ -69,23 +69,6 @@ public class DriverController extends BaseController{
     	return "hello";
     }
     
-    @GetMapping(value = "/sayFox")
-	@ResponseBody
-	@ApiOperation(value = "欢迎", httpMethod = "GET")
-	public  String sayFox() {
-    	FirefoxDriver browser = (FirefoxDriver) BrowserUtils.openFireBrowser(SysConstants.SysConfig.FIREFOXDRIVER,
-				SysConstants.SysConfig.FIREFOXPATH);
-		browser.get("https://www.baidu.com");
-		try {
-				Thread.sleep(20000L);
-			
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		browser.close();
-    	return "hello";
-    }
-    
 	@GetMapping(value = "/getBranch")
 	@ResponseBody
 	@ApiOperation(value = "欢迎", httpMethod = "GET")
@@ -100,17 +83,6 @@ public class DriverController extends BaseController{
 		}
 
 		Document document = Jsoup.parse(html);
-		// 获取团购标题
-		if (StringUtils.isBlank(merchantDeal.getDealTitle())) {
-			String title = document.getElementsByClass("sub-title").text();
-			try {
-				title = TitleUtils.getTitle(title);
-			} catch (Exception e) {
-				logger.error("titleStringErro", e);
-			}
-			merchantDeal.setDealTitle(title);
-			dianPingService.updateMerchantDeal(merchantDeal);
-		}
 		// 获取分店id
 		Elements elements = document.getElementsByAttribute("data-shop-id");
 		List<MerchantBranchEntity> mbs = new ArrayList<MerchantBranchEntity>();
@@ -162,13 +134,15 @@ public class DriverController extends BaseController{
 		}
 		dianPingService.saveMerchantBranch(mbs);
 		dianPingService.saveBranchDeal(merchantDeal.getId(), mbIds);
+		redisTemplate.delete(RedisConstants.KEYPRE.DIANPING + RedisConstants.OBJTYPE.HTML
+				+ SysConstants.SysConfig.DEAL + SysConstants.Symbol.COLON + dealId);
 		return "success";
 	}
 
 	private String getDealHtml(String dealId) {
 		// 打开浏览器
-		FirefoxDriver browser = (FirefoxDriver) BrowserUtils.openFireBrowser(SysConstants.SysConfig.FIREFOXDRIVER,
-				SysConstants.SysConfig.FIREFOXPATH);
+		ChromeDriver browser = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
+				SysConstants.SysConfig.CHROMEDRIVERPATH);
 		// 添加大众点评cookies
 		setCookie(browser);
 		browser.get(SysConstants.SysConfig.DIANPINGDEAl + SysConstants.Symbol.SLASH + dealId);
