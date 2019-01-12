@@ -163,7 +163,6 @@ public class DriverController extends BaseController{
 		action.moveToElement(wait
 				.until(ExpectedConditions.elementToBeClickable(browser.findElement(By.cssSelector("div.list-holder")))))
 				.perform();
-		;
 		wait.until(ExpectedConditions.elementToBeClickable(browser.findElement(By.cssSelector("ul.shoplist"))));
 		String html = Jsoup.parse(browser.getPageSource()).html();
 		redisTemplate.opsForValue().set(RedisConstants.KEYPRE.DIANPING + RedisConstants.OBJTYPE.HTML
@@ -175,18 +174,21 @@ public class DriverController extends BaseController{
 
 	@SuppressWarnings("unchecked")
 	private void setCookie(WebDriver browser) {
-		String cookiesPath = RedisConstants.KEYPRE.DIANPING+RedisConstants.OBJTYPE.COOKIES+SysConstants.SysConfig.USERNAME;
-		List<Map<String,Object>> cookies= (List<Map<String, Object>>) redisTemplate.opsForValue().get(cookiesPath);
-		if(cookies==null) {
-			cookies = BrowserUtils.loginDianPing(browser, SysConstants.SysConfig.USERNAME, SysConstants.SysConfig.PASSWORD);
-            redisTemplate.opsForValue().set(cookiesPath,cookies);
-		}
-		Options manage = browser.manage();
-		manage.deleteAllCookies();
-		browser.get(SysConstants.SysConfig.DIANPINGHOMEURL);
-		for (Map<String, Object> map : cookies) {
-			Cookie cookie = JSONObject.parseObject(JSONObject.toJSONString(map), Cookie.class);
-			manage.addCookie(cookie);
+		String cookiesPath = RedisConstants.KEYPRE.DIANPING + RedisConstants.OBJTYPE.COOKIES
+				+ SysConstants.SysConfig.USERNAME;
+		List<Map<String, Object>> cookies = (List<Map<String, Object>>) redisTemplate.opsForValue().get(cookiesPath);
+		if (cookies == null) {
+			cookies = BrowserUtils.loginDianPing(browser, SysConstants.SysConfig.USERNAME,
+					SysConstants.SysConfig.PASSWORD);
+			redisTemplate.opsForValue().set(cookiesPath, cookies);
+		} else {
+			Options manage = browser.manage();
+			manage.deleteAllCookies();
+			browser.get(SysConstants.SysConfig.DIANPINGHOMEURL);
+			for (Map<String, Object> map : cookies) {
+				Cookie cookie = JSONObject.parseObject(JSONObject.toJSONString(map), Cookie.class);
+				manage.addCookie(cookie);
+			}
 		}
 	}
 	
