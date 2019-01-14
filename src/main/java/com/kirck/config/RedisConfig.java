@@ -1,7 +1,5 @@
 package com.kirck.config;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,15 +13,11 @@ import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -32,8 +26,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-
-import java.time.Duration;
 
 @EnableCaching
 @Configuration
