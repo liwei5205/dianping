@@ -57,8 +57,8 @@ public class SysConstants {
 		String SHOP = "shop";
 		String DIANPINGSHOP = DIANPINGHOMEURL+Symbol.SLASH+SHOP;
 		String NEWSORT = "desc=1&sort=new&pageIndex=";
-		//String USERNAME = "18571844624";
-		String USERNAME = "18271894624";
+		String USERNAME = "18571844624";
+		//String USERNAME = "18271894624";
 		String PASSWORD = "Qq276532727";
 		String DEAL = "deal";
 	}

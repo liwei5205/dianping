@@ -1,9 +1,11 @@
 package com.kirck.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.datetime.DateFormatter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,7 @@ import com.kirck.mapper.MerchantBranchMapper;
 import com.kirck.mapper.MerchantDealMapper;
 import com.kirck.service.AbstractService;
 import com.kirck.service.IDianPingService;
+import com.kirck.utils.LocalDateUtils;
 
 @Service("dianPingService")
 public class DianPingServiceImpl extends AbstractService implements IDianPingService {
@@ -45,7 +48,6 @@ public class DianPingServiceImpl extends AbstractService implements IDianPingSer
 	@Override
 	@Transactional
 	public void saveMerchantBranch(List<MerchantBranchEntity> mbs) {
-		logger.info("mbs:"+JSONObject.toJSONString(mbs));
 		for (MerchantBranchEntity temp : mbs) {
 			temp.setCreateDate(LocalDateTime.now());
 			temp.setStatus(TypeConstants.Status.NORMAL);
@@ -73,6 +75,21 @@ public class DianPingServiceImpl extends AbstractService implements IDianPingSer
 	@Override
 	public void saveOrUpdate(List<MerchantDealEntity> merchantDeals) {
 		merchantDealMapper.batchInsert(merchantDeals);
+	}
+
+	@Override
+	public List<String> getLastDealIds() {
+		//获取最后一条的时间
+		MerchantDealEntity selectOne = merchantDealMapper.selectOne(new QueryWrapper<MerchantDealEntity>().orderByDesc("create_date").select("create_date").last("limit 1"));
+		 List<MerchantDealEntity> selectList = merchantDealMapper.selectList(new QueryWrapper<MerchantDealEntity>()
+				.likeRight("create_date", LocalDateUtils.getYYMMDDHH(selectOne.getCreateDate()))
+				.select("dianping_url_id")
+				);
+		 List<String> list = new ArrayList<String>();
+		 for (MerchantDealEntity temp : selectList) {
+			 list.add(temp.getDianpingUrlId());
+		}
+		 return list;
 	}
 
 }

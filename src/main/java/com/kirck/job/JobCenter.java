@@ -3,11 +3,11 @@ package com.kirck.job;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collector;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -18,9 +18,10 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Options;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -35,6 +36,7 @@ import com.kirck.utils.BrowserUtils;
 import com.kirck.utils.TitleUtils;
 import com.kirck.utils.UUIDUtils;
 
+@EnableAsync
 @Component
 public class JobCenter {
 	
@@ -44,12 +46,14 @@ public class JobCenter {
     @Resource
     RedisTemplate<String, Object> redisTemplate;
     
-    @Scheduled(cron = "0 1 * * * *")
+    @Async
+    @Scheduled(cron = "0 0/1 * * * *")
     public void job(){
         System.out.println("1分钟打印Job"+new Date());
     }
     
-	@Scheduled(cron = "0 59 23,11 * * ?")
+    @Async
+	@Scheduled(cron = "0 30 20,10 * * ?")
 	public void job2() {
 		// 打开浏览器
 		ChromeDriver webDriver = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
@@ -59,17 +63,21 @@ public class JobCenter {
 		String[] categoryIds = { "15", "21", "19", "164", "165", "167", "14", "26" };
 		String[] citys = { "wuhan", "shanghai" };
 		// http://t.dianping.com/list/shanghai-category_15?desc=1&sort=new
+		// 存储最后插入的集合
 		List<MerchantDealEntity> merchantDeals = new ArrayList<MerchantDealEntity>();
 		String url = "";
 		for (String city : citys) {
+			// 用于过滤不同类型导致的重复
+			// 拥有过滤分页更新时重复
+			Set<String> dealIds = new HashSet<String>();
 			CATEGORY: for (String categoryId : categoryIds) {
-				List<String> dealIds = new ArrayList<String>();
+				// 根据分类获取的一组团购
 				List<MerchantDealEntity> categoryDeals = new ArrayList<MerchantDealEntity>();
 				int index = NumberConstants.DIGIT_ZERO;
 				String lastDealPath = RedisConstants.KEYPRE.DIANPING + RedisConstants.OBJTYPE.DEAL + city
 						+ RedisConstants.SPLITTER + RedisConstants.OBJTYPE.CATEGORY + categoryId
 						+ RedisConstants.SPLITTER;
-				// 查找最新的折扣信息记录
+				// 查找上次最后的折扣信息记录
 				String urlId = (String) redisTemplate.opsForValue().get(lastDealPath);
 				while (index < 5) {
 					url = SysConstants.SysConfig.DIANPINGLIST + SysConstants.Symbol.SLASH + city
@@ -101,6 +109,7 @@ public class JobCenter {
 					categoryDeals.addAll(circeMerchantDeals);
 					if (circeMerchantDeals.size() != 40) {
 						if (!CollectionUtils.isEmpty(categoryDeals)) {
+							merchantDeals.addAll(categoryDeals);
 							redisTemplate.opsForValue().set(lastDealPath, categoryDeals.get(0).getDianpingUrlId());
 						}
 						continue CATEGORY;
@@ -110,22 +119,22 @@ public class JobCenter {
 				redisTemplate.opsForValue().set(lastDealPath, categoryDeals.get(0).getDianpingUrlId());
 				merchantDeals.addAll(categoryDeals);
 			}
-			Collections.reverse(merchantDeals);
 		}
-		if(!CollectionUtils.isEmpty(merchantDeals)) {
+		if (!CollectionUtils.isEmpty(merchantDeals)) {
 			// 去重
-			List<String> dealIds = new ArrayList<String>();
+			Set<String> dealIds = new HashSet<String>();
 			List<MerchantDealEntity> insetList = merchantDeals.stream().filter(m -> {
-				boolean flag = !dealIds.contains(m.getDealTitle());
-				dealIds.add(m.getDealTitle());
+				boolean flag = !dealIds.contains(m.getDianpingUrlId());
+				dealIds.add(m.getDianpingUrlId());
 				return flag;
 			}).collect(Collectors.toList());
+			System.out.println(JSONObject.toJSONString(insetList));
 			dianPingService.saveOrUpdate(insetList);
 		}
 		BrowserUtils.closeBrowser(webDriver);
 	}
     
-	private List<MerchantDealEntity> parseDeal(WebDriver webDriver, String lastUrlId, List<String> dealIds) {
+	private List<MerchantDealEntity> parseDeal(WebDriver webDriver, String lastUrlId, Set<String> dealIds) {
 		// 团购信息存储
 		List<MerchantDealEntity> merchantDeals = new ArrayList<MerchantDealEntity>();
 		WebElement element = webDriver.findElement(By.cssSelector("div.tg-tab-box.tg-floor.on"));
@@ -136,6 +145,7 @@ public class JobCenter {
 			String href = webElement.findElement(By.cssSelector("a.tg-floor-img")).getAttribute("href");
 			String urlId = href.substring(href.lastIndexOf('/') + NumberConstants.DIGIT_ONE);
 			if (lastUrlId.equals(urlId)) {
+				dealIds.add(urlId);
 				break;
 			}
 			if (dealIds.contains(urlId)) {

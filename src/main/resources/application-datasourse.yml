@@ -12,7 +12,7 @@ spring:
        primary: master #设置默认的数据源或者数据源组,默认值即为master
        datasource:
            master:
-                url: jdbc:mysql://106.12.86.89:3306/dianpingdev?serverTimezone=UTC&characterEncoding=utf-8
+                url: jdbc:mysql://106.12.86.89:3306/dianpingdev?serverTimezone=Asia/Shanghai&characterEncoding=utf-8
                 username: myuser
                 password: Qq276532727@com
                 platform: mysql
