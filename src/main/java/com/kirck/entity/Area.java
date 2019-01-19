@@ -30,7 +30,7 @@ public class Area extends Model<Area> {
         /**
      * 主键Id
      */
-        @TableId(value = "id", type = IdType.UUID)
+        @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
         /**
@@ -77,6 +77,9 @@ public class Area extends Model<Area> {
 
     @TableField("abbreviation")
     private String abbreviation;
+    
+    @TableField("phone_code")
+    private String phoneCode;
 
 
     @Override
@@ -84,4 +87,105 @@ public class Area extends Model<Area> {
         return this.id;
     }
 
+
+	public Integer getId() {
+		return id;
+	}
+
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+
+	public Integer getType() {
+		return type;
+	}
+
+
+	public void setType(Integer type) {
+		this.type = type;
+	}
+
+
+	public String getLabel() {
+		return label;
+	}
+
+
+	public void setLabel(String label) {
+		this.label = label;
+	}
+
+
+	public String getDescription() {
+		return description;
+	}
+
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+
+	public Integer getSort() {
+		return sort;
+	}
+
+
+	public void setSort(Integer sort) {
+		this.sort = sort;
+	}
+
+
+	public Integer getAreaID() {
+		return areaID;
+	}
+
+
+	public void setAreaID(Integer areaID) {
+		this.areaID = areaID;
+	}
+
+
+	public Integer getPid() {
+		return pid;
+	}
+
+
+	public void setPid(Integer pid) {
+		this.pid = pid;
+	}
+
+
+	public String getZip() {
+		return zip;
+	}
+
+
+	public void setZip(String zip) {
+		this.zip = zip;
+	}
+
+
+	public String getAbbreviation() {
+		return abbreviation;
+	}
+
+
+	public void setAbbreviation(String abbreviation) {
+		this.abbreviation = abbreviation;
+	}
+
+
+	public String getPhoneCode() {
+		return phoneCode;
+	}
+
+
+	public void setPhoneCode(String phoneCode) {
+		this.phoneCode = phoneCode;
+	}
+    
+    
 }

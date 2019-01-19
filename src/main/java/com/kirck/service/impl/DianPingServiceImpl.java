@@ -12,9 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.kirck.commen.TypeConstants;
+import com.kirck.entity.Area;
 import com.kirck.entity.BranchDealEntity;
 import com.kirck.entity.MerchantBranchEntity;
 import com.kirck.entity.MerchantDealEntity;
+import com.kirck.mapper.AreaMapper;
 import com.kirck.mapper.BranchDealMapper;
 import com.kirck.mapper.MerchantBranchMapper;
 import com.kirck.mapper.MerchantDealMapper;
@@ -33,6 +35,9 @@ public class DianPingServiceImpl extends AbstractService implements IDianPingSer
 	
 	@Autowired
 	private BranchDealMapper branchDealMapper;
+	
+	@Autowired
+	private AreaMapper areaMapper;
 	
 	@Override
 	public MerchantDealEntity findDealInfo(String dealId) {
@@ -90,6 +95,13 @@ public class DianPingServiceImpl extends AbstractService implements IDianPingSer
 			 list.add(temp.getDianpingUrlId());
 		}
 		 return list;
+	}
+
+	@Override
+	public void insertArea(List<Area> list) {
+			for (Area area : list) {
+				areaMapper.insert(area);
+			}
 	}
 
 }
