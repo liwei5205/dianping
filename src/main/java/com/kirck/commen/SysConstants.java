@@ -46,8 +46,8 @@ public class SysConstants {
 		//String FIREFOXDRIVER = "webdriver.gecko.driver";
 		String CHROMEDRIVER = "webdriver.chrome.driver";
 		//String FIREFOXPATH = "/opt/java/geckodriver";
-		//String CHROMEDRIVERPATH = "D:/project/chromedriver.exe";
-		String CHROMEDRIVERPATH = "/opt/java/chromedriver";
+		String CHROMEDRIVERPATH = "D:/project/chromedriver.exe";
+		//String CHROMEDRIVERPATH = "/opt/java/chromedriver";
 		String DIANPINGLOGINURL = "https://account.dianping.com/login";
 		String DIANPINGHOMEURL = "http://www.dianping.com";
 		//"http://t.dianping.com/list/shanghai-category_1?desc=1&sort=new&pageIndex=0"
@@ -57,8 +57,8 @@ public class SysConstants {
 		String SHOP = "shop";
 		String DIANPINGSHOP = DIANPINGHOMEURL+Symbol.SLASH+SHOP;
 		String NEWSORT = "desc=1&sort=new&pageIndex=";
-		String USERNAME = "18571844624";
-		//String USERNAME = "18271894624";
+		//String USERNAME = "18571844624";
+		String USERNAME = "18271894624";
 		String PASSWORD = "Qq276532727";
 		String DEAL = "deal";
 	}

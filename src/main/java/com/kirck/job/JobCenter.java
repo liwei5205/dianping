@@ -47,89 +47,83 @@ public class JobCenter {
     RedisTemplate<String, Object> redisTemplate;
     
     @Async
-    @Scheduled(cron = "0 0/1 * * * *")
+    @Scheduled(cron = "0 0 0/1 * * *")
     public void job(){
-        System.out.println("1分钟打印Job"+new Date());
+        System.out.println("1小时打印Job"+new Date());
     }
     
-    @Async
-	@Scheduled(cron = "0 30 20,10 * * ?")
+	@Async
+	@Scheduled(cron = "0 25 10,22 * * ?")
 	public void job2() {
 		// 打开浏览器
 		ChromeDriver webDriver = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
 				SysConstants.SysConfig.CHROMEDRIVERPATH);
 		// 设置缓存
 		setCookie(webDriver);
-		String[] categoryIds = { "15", "21", "19", "164", "165", "167", "14", "26" };
 		String[] citys = { "wuhan", "shanghai" };
-		// http://t.dianping.com/list/shanghai-category_15?desc=1&sort=new
+
 		// 存储最后插入的集合
 		List<MerchantDealEntity> merchantDeals = new ArrayList<MerchantDealEntity>();
 		String url = "";
 		for (String city : citys) {
+			List<MerchantDealEntity> cityDeals = new ArrayList<MerchantDealEntity>();
+
 			// 用于过滤不同类型导致的重复
 			// 拥有过滤分页更新时重复
 			Set<String> dealIds = new HashSet<String>();
-			CATEGORY: for (String categoryId : categoryIds) {
-				// 根据分类获取的一组团购
-				List<MerchantDealEntity> categoryDeals = new ArrayList<MerchantDealEntity>();
-				int index = NumberConstants.DIGIT_ZERO;
-				String lastDealPath = RedisConstants.KEYPRE.DIANPING + RedisConstants.OBJTYPE.DEAL + city
-						+ RedisConstants.SPLITTER + RedisConstants.OBJTYPE.CATEGORY + categoryId
-						+ RedisConstants.SPLITTER;
-				// 查找上次最后的折扣信息记录
-				String urlId = (String) redisTemplate.opsForValue().get(lastDealPath);
-				while (index < 5) {
-					url = SysConstants.SysConfig.DIANPINGLIST + SysConstants.Symbol.SLASH + city
-							+ SysConstants.Symbol.DASH + SysConstants.SysConfig.CATEGORY + SysConstants.Symbol.UNDERLINE
-							+ categoryId + SysConstants.Symbol.STRING_QUESTION + SysConstants.SysConfig.NEWSORT
-							+ index++;
-					try {
-						Thread.sleep(2000L);
+			// 根据分类获取的一组团购
+			int index = NumberConstants.DIGIT_ZERO;
+			String lastDealPath = RedisConstants.KEYPRE.DIANPING + RedisConstants.OBJTYPE.DEAL + city
+					+ RedisConstants.SPLITTER;
+			// 查找上次最后的折扣信息记录
+			String urlId = (String) redisTemplate.opsForValue().get(lastDealPath);
+			while (index < 40) {
+				url = SysConstants.SysConfig.DIANPINGLIST + SysConstants.Symbol.SLASH + city + SysConstants.Symbol.DASH
+						+ SysConstants.SysConfig.CATEGORY + SysConstants.Symbol.UNDERLINE + 1
+						+ SysConstants.Symbol.STRING_QUESTION + SysConstants.SysConfig.NEWSORT + index++;
+				try {
+					Thread.sleep(2000L);
 
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					// 跳转到最新信息链接
-					webDriver.get(url);
-					// 等待是否跳转成功
-					try {
-						while (true) {
-							Thread.sleep(2000L);
-							if (!webDriver.getCurrentUrl().startsWith(SysConstants.SysConfig.DIANPINGLOGINURL)) {
-								break;
-							}
-						}
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					// 解析团购信息
-					List<MerchantDealEntity> circeMerchantDeals = parseDeal(webDriver, urlId != null ? urlId : "-1",
-							dealIds);
-					categoryDeals.addAll(circeMerchantDeals);
-					if (circeMerchantDeals.size() != 40) {
-						if (!CollectionUtils.isEmpty(categoryDeals)) {
-							merchantDeals.addAll(categoryDeals);
-							redisTemplate.opsForValue().set(lastDealPath, categoryDeals.get(0).getDianpingUrlId());
-						}
-						continue CATEGORY;
-					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
-				// 将第一条记录塞入缓存
-				redisTemplate.opsForValue().set(lastDealPath, categoryDeals.get(0).getDianpingUrlId());
-				merchantDeals.addAll(categoryDeals);
+				// 跳转到最新信息链接
+				webDriver.get(url);
+				// 等待是否跳转成功
+				try {
+					while (true) {
+						Thread.sleep(2000L);
+						if (!webDriver.getCurrentUrl().startsWith(SysConstants.SysConfig.DIANPINGLOGINURL)) {
+							break;
+						}
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				// 解析团购信息
+				List<MerchantDealEntity> circeMerchantDeals = parseDeal(webDriver, urlId != null ? urlId : "-1",
+						dealIds);
+				cityDeals.addAll(circeMerchantDeals);
+				if (CollectionUtils.isEmpty(circeMerchantDeals) || circeMerchantDeals.size() != 40) {
+					break;
+				}
+
 			}
+			// 将第一条记录塞入缓存
+			if (!CollectionUtils.isEmpty(cityDeals)) {
+				redisTemplate.opsForValue().set(lastDealPath, cityDeals.get(0).getDianpingUrlId());
+			}
+			merchantDeals.addAll(cityDeals);
 		}
 		if (!CollectionUtils.isEmpty(merchantDeals)) {
-			// 去重
-			Set<String> dealIds = new HashSet<String>();
-			List<MerchantDealEntity> insetList = merchantDeals.stream().filter(m -> {
-				boolean flag = !dealIds.contains(m.getDianpingUrlId());
-				dealIds.add(m.getDianpingUrlId());
-				return flag;
-			}).collect(Collectors.toList());
-			System.out.println(JSONObject.toJSONString(insetList));
-			dianPingService.saveOrUpdate(insetList);
+			/*
+			 * // 去重 Set<String> dealIds = new HashSet<String>(); List<MerchantDealEntity>
+			 * insetList = merchantDeals.stream().filter(m -> { boolean flag =
+			 * !dealIds.contains(m.getDianpingUrlId()); dealIds.add(m.getDianpingUrlId());
+			 * return flag; }).collect(Collectors.toList());
+			 */
+			System.out.println("merchantDeals:" + JSONObject.toJSONString(merchantDeals));
+			dianPingService.saveOrUpdate(merchantDeals);
 		}
 		BrowserUtils.closeBrowser(webDriver);
 	}

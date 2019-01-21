@@ -16,7 +16,6 @@ import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Options;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -30,11 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.alibaba.fastjson.JSONObject;
 import com.kirck.commen.RedisConstants;
 import com.kirck.commen.SysConstants;
+import com.kirck.entity.Area;
 import com.kirck.entity.MerchantBranchEntity;
 import com.kirck.entity.MerchantDealEntity;
 import com.kirck.service.IDianPingService;
 import com.kirck.utils.BrowserUtils;
-import com.kirck.utils.TitleUtils;
 import com.kirck.utils.UUIDUtils;
 
 import io.swagger.annotations.Api;
@@ -67,6 +66,19 @@ public class DriverController extends BaseController{
 		}
 		browser.close();
     	return "hello";
+    }
+    
+    @GetMapping(value = "/login")
+	@ResponseBody
+	@ApiOperation(value = "欢迎", httpMethod = "GET")
+	public  String login() {
+		ChromeDriver browser = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
+				SysConstants.SysConfig.CHROMEDRIVERPATH);
+		List<Map<String,Object>> list = BrowserUtils.loginDianPingWUP(browser, SysConstants.SysConfig.USERNAME, SysConstants.SysConfig.PASSWORD);
+		String cookiesPath = RedisConstants.KEYPRE.DIANPING + RedisConstants.OBJTYPE.COOKIES
+		+ SysConstants.SysConfig.USERNAME;
+		redisTemplate.opsForValue().set(cookiesPath, list);
+		return "hello";
     }
     
 	@GetMapping(value = "/getBranch")
