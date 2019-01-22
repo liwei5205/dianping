@@ -31,5 +31,6 @@ public class RedisConstants {
 		String CATEGORY = "category" + SPLITTER;
 		String HTML = "html" + SPLITTER;
 		String DEAL = "deal"+SPLITTER;
+		String PORT = "port"+SPLITTER;;
 	}
 }

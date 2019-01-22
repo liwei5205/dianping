@@ -48,13 +48,6 @@ public class BrowserUtils {
     
     public static List<Map<String, Object>> loginDianPing(WebDriver webDriver, String username, String password) {
         webDriver.get(SysConstants.SysConfig.DIANPINGLOGINURL);
-        //显示等待控制对象
-/*        WebDriverWait webDriverWait=new WebDriverWait(webDriver,10);
-        webDriverWait.until(ExpectedConditions.elementToBeClickable(By.linkText("账号登录"))).click();
-        webDriverWait.until(ExpectedConditions.elementToBeClickable(By.id("tab-account"))).click();
-        webDriverWait.until(ExpectedConditions.elementToBeClickable(By.id("account-textbox"))).sendKeys(userName);
-        webDriverWait.until(ExpectedConditions.elementToBeClickable(By.id("password-textbox"))).sendKeys(password);
-        webDriver.findElement(By.id("login-button-account")).click();*/
         //等待2秒用于页面加载，保证Cookie响应全部获取。
         try {
             Thread.sleep(20000);
@@ -90,9 +83,13 @@ public class BrowserUtils {
 		webDriver.findElement(By.id("login-button-account")).click();
 
 		// 等待2秒用于页面加载，保证Cookie响应全部获取。
-
 		try {
-			Thread.sleep(20000);
+			while (true) {
+				Thread.sleep(2000L);
+				if (!webDriver.getCurrentUrl().startsWith(SysConstants.SysConfig.DIANPINGLOGINURL)) {
+					break;
+				}
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -121,7 +118,7 @@ public class BrowserUtils {
 		ChromeOptions chromeOptions = new ChromeOptions().merge(cap);
 		browser = new ChromeDriver(chromeOptions);
 		// 等待
-		browser.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+		browser.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
 		return browser;
 	}
 	

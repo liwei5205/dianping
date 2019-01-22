@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang3.StringUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
@@ -116,12 +119,6 @@ public class JobCenter {
 			merchantDeals.addAll(cityDeals);
 		}
 		if (!CollectionUtils.isEmpty(merchantDeals)) {
-			/*
-			 * // 去重 Set<String> dealIds = new HashSet<String>(); List<MerchantDealEntity>
-			 * insetList = merchantDeals.stream().filter(m -> { boolean flag =
-			 * !dealIds.contains(m.getDianpingUrlId()); dealIds.add(m.getDianpingUrlId());
-			 * return flag; }).collect(Collectors.toList());
-			 */
 			System.out.println("merchantDeals:" + JSONObject.toJSONString(merchantDeals));
 			dianPingService.saveOrUpdate(merchantDeals);
 		}
@@ -164,7 +161,7 @@ public class JobCenter {
 				+ SysConstants.SysConfig.USERNAME;
 		List<Map<String, Object>> cookies = (List<Map<String, Object>>) redisTemplate.opsForValue().get(cookiesPath);
 		if (cookies == null) {
-			cookies = BrowserUtils.loginDianPing(browser, SysConstants.SysConfig.USERNAME,
+			cookies = BrowserUtils.loginDianPingWUP(browser, SysConstants.SysConfig.USERNAME,
 					SysConstants.SysConfig.PASSWORD);
 			redisTemplate.opsForValue().set(cookiesPath, cookies);
 		} else {
@@ -178,4 +175,36 @@ public class JobCenter {
 		}
 	}
 
+	@Async
+	@Scheduled(cron = "30 11 17,21 * * ?")
+	public void job3() {
+		//获取当前存储的线程池
+		@SuppressWarnings("unchecked")
+		List<Map<String,String>> list = (List<Map<String, String>>) redisTemplate.opsForValue().get(RedisConstants.KEYPRE.DIANPING+RedisConstants.OBJTYPE.PORT);
+		//先校验这些线程是否还可用
+		List<Map<String,String>> badList = new ArrayList<Map<String,String>>();
+		for (Map<String, String> map : list) {
+			ChromeDriver webDriver = (ChromeDriver) BrowserUtils.openBrowserWithProxy(SysConstants.SysConfig.CHROMEDRIVER,
+					SysConstants.SysConfig.CHROMEDRIVERPATH,map.get("ip")+":"+map.get("port"));
+			webDriver.get("http://2019.ip138.com/ic.asp");
+			try {
+					Thread.sleep(2000L);
+				
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			Document parse = Jsoup.parse(webDriver.getPageSource());
+			String text = parse.text();
+			System.out.println(text);
+			if(StringUtils.isNotBlank(text)&&text.contains("您的IP地址")&&!text.contains("180.154.132.13")) {
+				System.out.println(map.get("ip")+":"+map.get("port"));
+			}else {
+				badList.add(map);
+			}
+			webDriver.get(SysConstants.SysConfig.DIANPINGHOMEURL);
+		}
+		list.removeAll(badList);
+		redisTemplate.opsForValue().set(RedisConstants.KEYPRE.DIANPING+RedisConstants.OBJTYPE.PORT, list);
+
+	}
 }

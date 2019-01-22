@@ -47,12 +47,6 @@ public interface IDianPingService {
 	 */
 	void saveOrUpdate(List<MerchantDealEntity> merchantDeals);
 
-	/**
-	 * 获取上次插入的ids
-	 * @return
-	 */
-	List<String> getLastDealIds();
-
 	void insertArea(List<Area> list);
 
 }

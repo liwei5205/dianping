@@ -1,8 +1,11 @@
 package com.kirck.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.annotation.Resource;
 
@@ -15,6 +18,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Options;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -29,10 +33,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.alibaba.fastjson.JSONObject;
 import com.kirck.commen.RedisConstants;
 import com.kirck.commen.SysConstants;
-import com.kirck.entity.Area;
 import com.kirck.entity.MerchantBranchEntity;
 import com.kirck.entity.MerchantDealEntity;
 import com.kirck.service.IDianPingService;
+import com.kirck.thread.IPPortRunnable;
 import com.kirck.utils.BrowserUtils;
 import com.kirck.utils.UUIDUtils;
 
@@ -54,29 +58,19 @@ public class DriverController extends BaseController{
     @GetMapping(value = "/hello")
 	@ResponseBody
 	@ApiOperation(value = "欢迎", httpMethod = "GET")
-	public  String sayHello() {
-		ChromeDriver browser = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
-				SysConstants.SysConfig.CHROMEDRIVERPATH);
-		browser.get("https://www.baidu.com");
-		try {
-				Thread.sleep(20000L);
-			
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		browser.close();
+	public  String sayHello(String iport) {
     	return "hello";
     }
     
     @GetMapping(value = "/login")
 	@ResponseBody
 	@ApiOperation(value = "欢迎", httpMethod = "GET")
-	public  String login() {
+	public  String login(String userName,String password) {
 		ChromeDriver browser = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
 				SysConstants.SysConfig.CHROMEDRIVERPATH);
-		List<Map<String,Object>> list = BrowserUtils.loginDianPingWUP(browser, SysConstants.SysConfig.USERNAME, SysConstants.SysConfig.PASSWORD);
+		List<Map<String,Object>> list = BrowserUtils.loginDianPingWUP(browser, userName,password);
 		String cookiesPath = RedisConstants.KEYPRE.DIANPING + RedisConstants.OBJTYPE.COOKIES
-		+ SysConstants.SysConfig.USERNAME;
+		+ userName;
 		redisTemplate.opsForValue().set(cookiesPath, list);
 		return "hello";
     }
@@ -204,4 +198,60 @@ public class DriverController extends BaseController{
 		}
 	}
 	
+	@GetMapping(value = "/getProxyIP")
+	@ResponseBody
+	@ApiOperation(value = "获取代理ip", httpMethod = "GET")
+	public String getProxyIP() {
+		ChromeDriver browser = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
+				SysConstants.SysConfig.CHROMEDRIVERPATH);
+		int index = 1;
+		List<List<Map<String,String>>> ips = new ArrayList<List<Map<String,String>>>();
+		while (index <15) {
+			List<Map<String,String>> proxyIPs = new ArrayList<Map<String,String>>();
+			browser.get("https://www.xicidaili.com/nt/" + index);
+			try {
+				Thread.sleep(1000L);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			WebDriverWait webDriverWait = new WebDriverWait(browser, 5);
+			WebElement tbody = webDriverWait.until(ExpectedConditions.elementToBeClickable(By.tagName("tbody")));
+			List<WebElement> odds = tbody.findElements(By.cssSelector("tr.odd"));
+			for (WebElement webElement : odds) {
+				Map<String,String> map = new HashMap<String,String>();
+				String text = webElement.getText();
+				String[] split = text.split(" ");
+				map.put("ip", split[0]);
+				map.put("port", split[1]);
+				proxyIPs.add(map);
+			}
+			index++;
+			ips.add(proxyIPs);
+		}
+		browser.close();
+		CopyOnWriteArrayList<Map<String, String>> copy = new CopyOnWriteArrayList<Map<String,String>>();
+		index = 0;
+        Vector<Thread> threads = new Vector<Thread>();
+		for (List<Map<String,String>> proxyIPs : ips) {
+			Thread newThread = new Thread(new IPPortRunnable(copy,proxyIPs),"线程"+index++);
+			threads.add(newThread);		
+		}
+		for (Thread thread : threads) {
+			thread.start();
+		}
+		
+		 for (Thread iThread : threads) {
+		        try {
+		            // 等待所有线程执行完毕
+		            iThread.join();
+		        } catch (InterruptedException e) {
+		            e.printStackTrace();
+		        }
+		    }
+		System.out.println("主线执行。");
+		System.out.println(JSONObject.toJSONString(copy));
+		redisTemplate.opsForValue().set(RedisConstants.KEYPRE.DIANPING+RedisConstants.OBJTYPE.PORT, copy);
+		return "hello";
+	}
+
 }

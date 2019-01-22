@@ -82,20 +82,18 @@ public class DianPingServiceImpl extends AbstractService implements IDianPingSer
 		merchantDealMapper.batchInsert(merchantDeals);
 	}
 
-	@Override
-	public List<String> getLastDealIds() {
-		//获取最后一条的时间
-		MerchantDealEntity selectOne = merchantDealMapper.selectOne(new QueryWrapper<MerchantDealEntity>().orderByDesc("create_date").select("create_date").last("limit 1"));
-		 List<MerchantDealEntity> selectList = merchantDealMapper.selectList(new QueryWrapper<MerchantDealEntity>()
-				.likeRight("create_date", LocalDateUtils.getYYMMDDHH(selectOne.getCreateDate()))
-				.select("dianping_url_id")
-				);
-		 List<String> list = new ArrayList<String>();
-		 for (MerchantDealEntity temp : selectList) {
-			 list.add(temp.getDianpingUrlId());
-		}
-		 return list;
-	}
+	/*
+	 * @Override public List<String> getLastDealIds() { //获取最后一条的时间
+	 * MerchantDealEntity selectOne = merchantDealMapper.selectOne(new
+	 * QueryWrapper<MerchantDealEntity>().orderByDesc("create_date").select(
+	 * "create_date").last("limit 1")); List<MerchantDealEntity> selectList =
+	 * merchantDealMapper.selectList(new QueryWrapper<MerchantDealEntity>()
+	 * .likeRight("create_date",
+	 * LocalDateUtils.getYYMMDDHH(selectOne.getCreateDate()))
+	 * .select("dianping_url_id") ); List<String> list = new ArrayList<String>();
+	 * for (MerchantDealEntity temp : selectList) {
+	 * list.add(temp.getDianpingUrlId()); } return list; }
+	 */
 
 	@Override
 	public void insertArea(List<Area> list) {
