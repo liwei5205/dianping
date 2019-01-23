@@ -1,5 +1,6 @@
 package com.kirck.job;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public class JobCenter {
     }
     
 	@Async
-	@Scheduled(cron = "0 25 10,22 * * ?")
+	@Scheduled(cron = "0 25 9,22 * * ?")
 	public void job2() {
 		// 打开浏览器
 		ChromeDriver webDriver = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
@@ -176,35 +177,28 @@ public class JobCenter {
 	}
 
 	@Async
-	@Scheduled(cron = "30 11 17,21 * * ?")
+	@Scheduled(cron = "10 03 16,21 * * ?")
 	public void job3() {
-		//获取当前存储的线程池
+		// 获取当前存储的线程池
 		@SuppressWarnings("unchecked")
-		List<Map<String,String>> list = (List<Map<String, String>>) redisTemplate.opsForValue().get(RedisConstants.KEYPRE.DIANPING+RedisConstants.OBJTYPE.PORT);
-		//先校验这些线程是否还可用
-		List<Map<String,String>> badList = new ArrayList<Map<String,String>>();
-		for (Map<String, String> map : list) {
-			ChromeDriver webDriver = (ChromeDriver) BrowserUtils.openBrowserWithProxy(SysConstants.SysConfig.CHROMEDRIVER,
-					SysConstants.SysConfig.CHROMEDRIVERPATH,map.get("ip")+":"+map.get("port"));
-			webDriver.get("http://2019.ip138.com/ic.asp");
+		List<String> list = (List<String>) redisTemplate.opsForValue()
+				.get(RedisConstants.KEYPRE.DIANPING + RedisConstants.OBJTYPE.PORT);
+		// 先校验这些线程是否还可用
+		List<Map<String, String>> badList = new ArrayList<Map<String, String>>();
+		for (String iport : list) {
+			WebDriver webDriver = BrowserUtils.openBrowserWithProxy(SysConstants.SysConfig.CHROMEDRIVER,
+					SysConstants.SysConfig.CHROMEDRIVERPATH, iport);
 			try {
-					Thread.sleep(2000L);
-				
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				webDriver.get(SysConstants.SysConfig.DIANPINGHOMEURL);
+				Thread.sleep(2000L);
+				System.out.println(iport+":"+webDriver.getPageSource().contains("大众点评"));
+				System.out.println("============================================================================");
+			} catch (Exception e) {
+				continue;
+			}finally {
+				webDriver.close();
 			}
-			Document parse = Jsoup.parse(webDriver.getPageSource());
-			String text = parse.text();
-			System.out.println(text);
-			if(StringUtils.isNotBlank(text)&&text.contains("您的IP地址")&&!text.contains("180.154.132.13")) {
-				System.out.println(map.get("ip")+":"+map.get("port"));
-			}else {
-				badList.add(map);
-			}
-			webDriver.get(SysConstants.SysConfig.DIANPINGHOMEURL);
 		}
 		list.removeAll(badList);
-		redisTemplate.opsForValue().set(RedisConstants.KEYPRE.DIANPING+RedisConstants.OBJTYPE.PORT, list);
-
 	}
 }

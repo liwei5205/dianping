@@ -2,8 +2,10 @@ package com.kirck.controller;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -205,12 +207,13 @@ public class DriverController extends BaseController{
 		ChromeDriver browser = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
 				SysConstants.SysConfig.CHROMEDRIVERPATH);
 		int index = 1;
-		List<List<Map<String,String>>> ips = new ArrayList<List<Map<String,String>>>();
-		while (index <15) {
-			List<Map<String,String>> proxyIPs = new ArrayList<Map<String,String>>();
-			browser.get("https://www.xicidaili.com/nt/" + index);
+		
+		Set<String> proxyIPs = new HashSet<String>();
+		
+		while (index < 3) {
+			browser.get("https://www.xicidaili.com/wt/" + index++);
 			try {
-				Thread.sleep(1000L);
+				Thread.sleep(1500L);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -218,39 +221,70 @@ public class DriverController extends BaseController{
 			WebElement tbody = webDriverWait.until(ExpectedConditions.elementToBeClickable(By.tagName("tbody")));
 			List<WebElement> odds = tbody.findElements(By.cssSelector("tr.odd"));
 			for (WebElement webElement : odds) {
-				Map<String,String> map = new HashMap<String,String>();
-				String text = webElement.getText();
-				String[] split = text.split(" ");
-				map.put("ip", split[0]);
-				map.put("port", split[1]);
-				proxyIPs.add(map);
+				String[] split = webElement.getText().split(" ");
+				String ip = split[0]+":"+split[1];
+				proxyIPs.add(ip);
 			}
-			index++;
-			ips.add(proxyIPs);
 		}
+		
+		index = 1;
+		while (index < 3) {
+			browser.get("https://www.kuaidaili.com/free/inha/" + index++);
+			// intr
+			try {
+				Thread.sleep(1500L);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			WebDriverWait webDriverWait = new WebDriverWait(browser, 5);
+			WebElement tbody = webDriverWait.until(ExpectedConditions.elementToBeClickable(By.tagName("tbody")));
+			List<WebElement> odds = tbody.findElements(By.cssSelector("tr"));
+			for (WebElement webElement : odds) {
+				String[] split = webElement.getText().split(" ");
+				String ip = split[0]+":"+split[1];
+				proxyIPs.add(ip);
+			}
+		}
+		
+		List<List<String>> ips = new ArrayList<List<String>>();
+		List<String> list = new ArrayList<String>(proxyIPs);
+		int size = proxyIPs.size();
+		if(size<50) {
+			ips.add(list);
+		}else {
+			int zheng = size/50;
+			int yu = size % 50 ;
+			index = 0;
+			while(index<zheng) {
+				ips.add(list.subList(10*index, 10*(index+1)));
+				index ++;
+			}
+			ips.add(list.subList(10*index, 10*(index)+yu));
+		}
+		System.out.println(ips.size());
 		browser.close();
-		CopyOnWriteArrayList<Map<String, String>> copy = new CopyOnWriteArrayList<Map<String,String>>();
+
+		CopyOnWriteArrayList<String> copy = new CopyOnWriteArrayList<String>();
 		index = 0;
-        Vector<Thread> threads = new Vector<Thread>();
-		for (List<Map<String,String>> proxyIPs : ips) {
-			Thread newThread = new Thread(new IPPortRunnable(copy,proxyIPs),"线程"+index++);
-			threads.add(newThread);		
+		Vector<Thread> threads = new Vector<Thread>();
+		for (List<String> ipList : ips) {
+			Thread newThread = new Thread(new IPPortRunnable(copy, ipList), "线程" + index++);
+			threads.add(newThread);
 		}
 		for (Thread thread : threads) {
 			thread.start();
 		}
-		
-		 for (Thread iThread : threads) {
-		        try {
-		            // 等待所有线程执行完毕
-		            iThread.join();
-		        } catch (InterruptedException e) {
-		            e.printStackTrace();
-		        }
-		    }
+		for (Thread iThread : threads) {
+			try {
+				// 等待所有线程执行完毕
+				iThread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 		System.out.println("主线执行。");
 		System.out.println(JSONObject.toJSONString(copy));
-		redisTemplate.opsForValue().set(RedisConstants.KEYPRE.DIANPING+RedisConstants.OBJTYPE.PORT, copy);
+		redisTemplate.opsForValue().set(RedisConstants.KEYPRE.DIANPING + RedisConstants.OBJTYPE.PORT, copy);
 		return "hello";
 	}
 

@@ -119,6 +119,8 @@ public class BrowserUtils {
 		browser = new ChromeDriver(chromeOptions);
 		// 等待
 		browser.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
+		browser.manage().timeouts().pageLoadTimeout(15,TimeUnit.SECONDS);
+		browser.manage().timeouts().setScriptTimeout(15,TimeUnit.SECONDS);
 		return browser;
 	}
 	
