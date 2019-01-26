@@ -3,6 +3,7 @@ package com.kirck.service.impl;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.datetime.DateFormatter;
@@ -29,40 +30,40 @@ public class DianPingServiceImpl extends AbstractService implements IDianPingSer
 
 	@Autowired
 	private MerchantDealMapper merchantDealMapper;
-	
+
 	@Autowired
 	private MerchantBranchMapper merchantBranchMapper;
-	
+
 	@Autowired
 	private BranchDealMapper branchDealMapper;
-	
+
 	@Autowired
 	private AreaMapper areaMapper;
-	
+
 	@Override
 	public MerchantDealEntity findDealInfo(String dealId) {
 		return merchantDealMapper.selectOne(new QueryWrapper<MerchantDealEntity>().eq("dianping_url_id", dealId));
 	}
-	
+
 	@Override
 	@Transactional
 	public void updateMerchantDeal(MerchantDealEntity merchantDeal) {
 		merchantDealMapper.updateById(merchantDeal);
 	}
-	
+
 	@Override
 	@Transactional
 	public void saveMerchantBranch(List<MerchantBranchEntity> mbs) {
 		for (MerchantBranchEntity temp : mbs) {
 			temp.setCreateDate(LocalDateTime.now());
 			temp.setStatus(TypeConstants.Status.NORMAL);
-				merchantBranchMapper.insert(temp);
+			merchantBranchMapper.insert(temp);
 		}
 	}
 
 	@Override
 	public void saveBranchDeal(String dealId, List<String> mbIds) {
-		//需要重复校验
+		// 需要重复校验
 		for (String mbId : mbIds) {
 			BranchDealEntity branchDeal = new BranchDealEntity();
 			branchDeal.setDealId(dealId);
@@ -82,24 +83,16 @@ public class DianPingServiceImpl extends AbstractService implements IDianPingSer
 		merchantDealMapper.batchInsert(merchantDeals);
 	}
 
-	/*
-	 * @Override public List<String> getLastDealIds() { //获取最后一条的时间
-	 * MerchantDealEntity selectOne = merchantDealMapper.selectOne(new
-	 * QueryWrapper<MerchantDealEntity>().orderByDesc("create_date").select(
-	 * "create_date").last("limit 1")); List<MerchantDealEntity> selectList =
-	 * merchantDealMapper.selectList(new QueryWrapper<MerchantDealEntity>()
-	 * .likeRight("create_date",
-	 * LocalDateUtils.getYYMMDDHH(selectOne.getCreateDate()))
-	 * .select("dianping_url_id") ); List<String> list = new ArrayList<String>();
-	 * for (MerchantDealEntity temp : selectList) {
-	 * list.add(temp.getDianpingUrlId()); } return list; }
-	 */
+	@Override
+	public Set<String> getLastDealIds() { // 获取最后一条的时间
+		return merchantDealMapper.getLastDealIds();
+	}
 
 	@Override
 	public void insertArea(List<Area> list) {
-			for (Area area : list) {
-				areaMapper.insert(area);
-			}
+		for (Area area : list) {
+			areaMapper.insert(area);
+		}
 	}
 
 }

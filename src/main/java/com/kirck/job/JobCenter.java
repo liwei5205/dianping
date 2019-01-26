@@ -1,6 +1,5 @@
 package com.kirck.job;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,19 +8,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
-import org.apache.commons.lang3.StringUtils;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Options;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -44,6 +41,8 @@ import com.kirck.utils.UUIDUtils;
 @Component
 public class JobCenter {
 	
+	protected final Logger logger = LoggerFactory.getLogger(getClass());
+	
     @Autowired
     private IDianPingService dianPingService;
 
@@ -57,7 +56,7 @@ public class JobCenter {
     }
     
 	@Async
-	@Scheduled(cron = "0 25 9,22 * * ?")
+	@Scheduled(cron = "0 30 9,21 * * ?")
 	public void job2() {
 		// 打开浏览器
 		ChromeDriver webDriver = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
@@ -71,7 +70,6 @@ public class JobCenter {
 		String url = "";
 		for (String city : citys) {
 			List<MerchantDealEntity> cityDeals = new ArrayList<MerchantDealEntity>();
-
 			// 用于过滤不同类型导致的重复
 			// 拥有过滤分页更新时重复
 			Set<String> dealIds = new HashSet<String>();
@@ -81,6 +79,7 @@ public class JobCenter {
 					+ RedisConstants.SPLITTER;
 			// 查找上次最后的折扣信息记录
 			String urlId = (String) redisTemplate.opsForValue().get(lastDealPath);
+			//Set<String> lastIds = dianPingService.getLastDealIds();
 			while (index < 40) {
 				url = SysConstants.SysConfig.DIANPINGLIST + SysConstants.Symbol.SLASH + city + SysConstants.Symbol.DASH
 						+ SysConstants.SysConfig.CATEGORY + SysConstants.Symbol.UNDERLINE + 1
@@ -106,12 +105,16 @@ public class JobCenter {
 				}
 				// 解析团购信息
 				List<MerchantDealEntity> circeMerchantDeals = parseDeal(webDriver, urlId != null ? urlId : "-1",
-						dealIds);
+						dealIds
+						//, lastIds
+						);
 				cityDeals.addAll(circeMerchantDeals);
 				if (CollectionUtils.isEmpty(circeMerchantDeals) || circeMerchantDeals.size() != 40) {
+					if (!CollectionUtils.isEmpty(cityDeals)) {
+						redisTemplate.opsForValue().set(lastDealPath, cityDeals.get(0).getDianpingUrlId());
+					}
 					break;
 				}
-
 			}
 			// 将第一条记录塞入缓存
 			if (!CollectionUtils.isEmpty(cityDeals)) {
@@ -120,13 +123,15 @@ public class JobCenter {
 			merchantDeals.addAll(cityDeals);
 		}
 		if (!CollectionUtils.isEmpty(merchantDeals)) {
-			System.out.println("merchantDeals:" + JSONObject.toJSONString(merchantDeals));
+			logger.info("merchantDeals:" + JSONObject.toJSONString(merchantDeals));
 			dianPingService.saveOrUpdate(merchantDeals);
 		}
 		BrowserUtils.closeBrowser(webDriver);
 	}
     
-	private List<MerchantDealEntity> parseDeal(WebDriver webDriver, String lastUrlId, Set<String> dealIds) {
+	private List<MerchantDealEntity> parseDeal(WebDriver webDriver, String lastUrlId, Set<String> dealIds
+			//,Set<String> lastIds
+			) {
 		// 团购信息存储
 		List<MerchantDealEntity> merchantDeals = new ArrayList<MerchantDealEntity>();
 		WebElement element = webDriver.findElement(By.cssSelector("div.tg-tab-box.tg-floor.on"));
@@ -136,8 +141,8 @@ public class JobCenter {
 			MerchantDealEntity merchantDeal = new MerchantDealEntity();
 			String href = webElement.findElement(By.cssSelector("a.tg-floor-img")).getAttribute("href");
 			String urlId = href.substring(href.lastIndexOf('/') + NumberConstants.DIGIT_ONE);
-			if (lastUrlId.equals(urlId)) {
-				dealIds.add(urlId);
+			if (lastUrlId.equals(urlId) //|| lastIds.contains(urlId)
+					) {
 				break;
 			}
 			if (dealIds.contains(urlId)) {
@@ -162,7 +167,7 @@ public class JobCenter {
 				+ SysConstants.SysConfig.USERNAME;
 		List<Map<String, Object>> cookies = (List<Map<String, Object>>) redisTemplate.opsForValue().get(cookiesPath);
 		if (cookies == null) {
-			cookies = BrowserUtils.loginDianPingWUP(browser, SysConstants.SysConfig.USERNAME,
+			cookies = BrowserUtils.loginDianPing(browser, SysConstants.SysConfig.USERNAME,
 					SysConstants.SysConfig.PASSWORD);
 			redisTemplate.opsForValue().set(cookiesPath, cookies);
 		} else {
@@ -177,7 +182,7 @@ public class JobCenter {
 	}
 
 	@Async
-	@Scheduled(cron = "10 03 16,21 * * ?")
+	//@Scheduled(cron = "10 03 16,21 * * ?")
 	public void job3() {
 		// 获取当前存储的线程池
 		@SuppressWarnings("unchecked")

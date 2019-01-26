@@ -1,6 +1,7 @@
 package com.kirck.service;
 
 import java.util.List;
+import java.util.Set;
 
 import com.kirck.entity.Area;
 import com.kirck.entity.MerchantBranchEntity;
@@ -48,5 +49,7 @@ public interface IDianPingService {
 	void saveOrUpdate(List<MerchantDealEntity> merchantDeals);
 
 	void insertArea(List<Area> list);
+
+	Set<String> getLastDealIds();
 
 }

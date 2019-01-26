@@ -66,7 +66,7 @@ public class DriverController extends BaseController{
     
     @GetMapping(value = "/login")
 	@ResponseBody
-	@ApiOperation(value = "欢迎", httpMethod = "GET")
+	@ApiOperation(value = "测试登录", httpMethod = "GET")
 	public  String login(String userName,String password) {
 		ChromeDriver browser = (ChromeDriver) BrowserUtils.openBrowser(SysConstants.SysConfig.CHROMEDRIVER,
 				SysConstants.SysConfig.CHROMEDRIVERPATH);

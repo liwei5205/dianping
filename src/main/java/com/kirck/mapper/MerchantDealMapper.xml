@@ -22,4 +22,7 @@
     	</foreach >
     </insert>
     
+    <select id= "getLastDealIds" resultType="java.lang.String">
+    select dianping_url_id from t_merchant_deal where create_date > (select SUBTIME(create_date,'1:0:0') from t_merchant_deal ORDER BY create_date desc limit 1)
+    </select>
 </mapper>

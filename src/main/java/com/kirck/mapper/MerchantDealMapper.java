@@ -1,6 +1,7 @@
 package com.kirck.mapper;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -20,5 +21,7 @@ import com.kirck.entity.MerchantDealEntity;
 public interface MerchantDealMapper extends BaseMapper<MerchantDealEntity> {
 
 	void batchInsert(@Param("merchantDeals")List<MerchantDealEntity> merchantDeals);
+
+	Set<String> getLastDealIds();
 
 }
