@@ -39,7 +39,7 @@ public class DruidConfiguration {
 	 
 	        //添加初始化参数：initParams
 	        /** 白名单，如果不配置或value为空，则允许所有 */
-	        servletRegistrationBean.addInitParameter("allow","127.0.0.1,192.0.0.1,114.93.33.228");
+	        servletRegistrationBean.addInitParameter("allow","127.0.0.1,192.0.0.1,116.232.86.209");
 	        /** 黑名单，与白名单存在相同IP时，优先于白名单 */
 	        servletRegistrationBean.addInitParameter("deny","192.0.0.1");
 	        /** 用户名 */
